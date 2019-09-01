@@ -1,0 +1,58 @@
+body {
+    background-image: url(travian-bg.jpg);
+    background-size: cover;
+    font-family: Arial, Helvetica, Verdana, sans-serif;
+}
+a {
+    color: #fff;
+    font-weight: bold;
+}
+.header {
+    margin-bottom: 20px;
+}
+
+.align-left {
+    text-align: left !important;
+}
+.align-right {
+    text-align: right !important;
+}
+
+input[type="text"],input[type="submit"] {
+    padding: 5px 10px;
+}
+input[type="checkbox"] {
+    -ms-transform: scale(1.2); /* IE */
+    -moz-transform: scale(1.2); /* FF */
+    -webkit-transform: scale(1.2); /* Safari and Chrome */
+    -o-transform: scale(1.2); /* Opera */
+    transform: scale(1.2);
+}
+table.farms {
+    background-color:rgba(255, 255, 255, 0.6);
+    padding: 20px 30px;
+    width: 50%;
+    text-align: center;
+    font-size: 14px;
+}
+table.farms tr.header {
+    font-size: 16px;
+    font-weight: bold;
+}
+table.farms .citytd {
+    font-weight: bold;
+    color: #89af0d;
+    cursor:pointer;
+}
+.error {
+    padding: 15px;
+    color: white;
+    margin: 15px 0px;
+    background-color: #bb4f47;
+}
+.success {
+    padding: 15px;
+    color: white;
+    margin: 15px 0px;
+    background-color: #478649;
+}
