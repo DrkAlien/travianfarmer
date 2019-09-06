@@ -25,12 +25,16 @@ class travianFarmer {
     public $currentCityId;
     public $cityIdToX;
     public $cityIdToY;
-    public $troupsAmount = TROUPS_AMOUNT;
+    public $troupsAmount = 2;
+    public $troupsType = 't1';
 
     /**
      * construct
      */
-    public function _construct() { }
+    public function __construct($amount = 2, $type = 't1') {
+        $this->troupsAmount = $amount;
+        $this->troupsType = $type;
+    }
 
     /**
      * Login to travian
@@ -105,7 +109,6 @@ class travianFarmer {
      * get timestamp and session shits
      */
     public function setTroups( $cityId = 0 ) {
-
         $this->currentCityId = $cityId;
         $url = $this->setTroupsUrl.$cityId;
         $html = $this->callCurl($url,array());
@@ -159,15 +162,15 @@ class travianFarmer {
                       'timestamp_checksum'=>$this->timestamp_checksum,
                       'b'=>'1',
                       'currentDid'=>$this->myCityIdFrom,
-                      't1'=>$this->troupsAmount, // set to send only Clubswinger or first unit of the rase
+                      't1'=>($this->troupsType == 't1')? $this->troupsAmount:'', // set to send only Clubswinger or first unit of the rase
                       't4'=>'',
                       't7'=>'',
                       't9'=>'',
-                      't2'=>'',
+                      't2'=>($this->troupsType == 't2')? $this->troupsAmount:'',
                       't5'=>'',
                       't8'=>'',
                       't10'=>'',
-                      't3'=>'',
+                      't3'=>($this->troupsType == 't3')? $this->troupsAmount:'',
                       't6'=>'',
                       't11'=>'',
                       'dname'=>'',
@@ -187,71 +190,120 @@ class travianFarmer {
      */
     public function confirmAttac( $html = '') {
 
-        // get timestamp
-        $tag = '<input type="hidden" name="timestamp" value="';
+        // get village x
+        $villageX = '';
+        $tag = 'href="karte.php?x=';
         $startPos = stripos($html, $tag);
         if($startPos !== false) {
             $startPos += strlen($tag);
-            $endPos = stripos($html, '" />', $startPos);
-            $value = trim(substr($html, $startPos, $endPos - $startPos));
+            $endPos = stripos($html, '&amp;', $startPos);
+            $villageX = trim(substr($html, $startPos, $endPos - $startPos));
         }
-        $this->timestamp = $value;
-
-        // get timestamp checksum
-        $tag = '<input type="hidden" name="timestamp_checksum"';
+        // get village y
+        $villageY = '';
+        $tag = 'href="karte.php?x='.$villageX.'&amp;y=';
         $startPos = stripos($html, $tag);
         if($startPos !== false) {
             $startPos += strlen($tag);
-            $endPos = stripos($html, '" />', $startPos);
-            $value = trim(substr($html, $startPos, $endPos - $startPos));
-            $value = str_replace('value="', '', $value);
-            $value = trim($value);
+            $endPos = stripos($html, '">', $startPos);
+            $villageY = trim(substr($html, $startPos, $endPos - $startPos));
         }
-        $this->timestamp_checksum = $value;
-
-        // get (a) value
-        $tag = '<input type="hidden" name="a" value="';
+        // get name
+        $villageName = '';
+        $tag = '<a class="" href="karte.php?x=';
         $startPos = stripos($html, $tag);
         if($startPos !== false) {
             $startPos += strlen($tag);
-            $endPos = stripos($html, '" />', $startPos);
-            $value = trim(substr($html, $startPos, $endPos - $startPos));
+            $searchEnd = strlen($html) - $startPos;
+            $searchEnd = $searchEnd * -1;
+            $searchStart = strrpos($html, '<td>', $searchEnd);
+            $searchStart += 4;
+            $villageName = trim(substr($html, $searchStart, ($startPos-strlen($tag)) - $searchStart));
         }
-        $this->a = $value;
 
-        $data = array('redeployHero'=>'',
-                      'timestamp'=>$this->timestamp,
-                      'timestamp_checksum'=>$this->timestamp_checksum,
-                      'id'=>'39',
-                      'a'=>$this->a,
-                      'b'=>'1',
-                      'c'=>'4', // raid
-                      'kid'=>$this->currentCityId,
-                      't1'=>$this->troupsAmount, // set to send only Clubswinger or first unit of the rase
-                      't2'=>'0',
-                      't3'=>'0',
-                      't4'=>'0',
-                      't5'=>'0',
-                      't6'=>'0',
-                      't7'=>'0',
-                      't8'=>'0',
-                      't9'=>'0',
-                      't10'=>'0',
-                      't11'=>'0',
-                      'dname'=>'0',
-                      'sendReally'=>'0',
-                      'troopsSent'=>'1',
-                      'currentDid'=>$this->myCityIdFrom,
-                      'b'=>'2',
-                      'dname'=>'',
-                      'x'=>$this->cityIdToX,
-                      'y'=>$this->cityIdToY,
-                      's1'=>'ok'
+        $villageData = array('name' => trim($villageName),
+                             'x'    => $villageX,
+                             'y'    => $villageY,
         );
-        echo 'Attac on: #'.$this->currentCityId.' (x: '.$this->cityIdToX.', y: '.$this->cityIdToY.') sent. <br/>';
-        sleep(rand(1,2));
-        $html = $this->callCurl(TRAVIAN_SERVER.'/build.php?id=39&tt=2', $data,'POST');
 
+        if(is_numeric($villageData['x']) && is_numeric($villageData['y'])) {
+            // get timestamp
+            $tag = '<input type="hidden" name="timestamp" value="';
+            $startPos = stripos($html, $tag);
+            if($startPos !== false) {
+                $startPos += strlen($tag);
+                $endPos = stripos($html, '" />', $startPos);
+                $value = trim(substr($html, $startPos, $endPos - $startPos));
+            }
+            $this->timestamp = $value;
+
+            // get timestamp checksum
+            $tag = '<input type="hidden" name="timestamp_checksum"';
+            $startPos = stripos($html, $tag);
+            if($startPos !== false) {
+                $startPos += strlen($tag);
+                $endPos = stripos($html, '" />', $startPos);
+                $value = trim(substr($html, $startPos, $endPos - $startPos));
+                $value = str_replace('value="', '', $value);
+                $value = trim($value);
+            }
+            $this->timestamp_checksum = $value;
+
+            // get (a) value
+            $tag = '<input type="hidden" name="a" value="';
+            $startPos = stripos($html, $tag);
+            if($startPos !== false) {
+                $startPos += strlen($tag);
+                $endPos = stripos($html, '" />', $startPos);
+                $value = trim(substr($html, $startPos, $endPos - $startPos));
+            }
+            $this->a = $value;
+
+            $data = array('redeployHero'=>'',
+                          'timestamp'=>$this->timestamp,
+                          'timestamp_checksum'=>$this->timestamp_checksum,
+                          'id'=>'39',
+                          'a'=>$this->a,
+                          'b'=>'1',
+                          'c'=>'4', // raid
+                          'kid'=>$this->currentCityId,
+                          't1'=>($this->troupsType == 't1')? $this->troupsAmount:'', // set to send only Clubswinger or first unit of the rase
+                          't2'=>($this->troupsType == 't2')? $this->troupsAmount:'',
+                          't3'=>($this->troupsType == 't3')? $this->troupsAmount:'',
+                          't4'=>'0',
+                          't5'=>'0',
+                          't6'=>'0',
+                          't7'=>'0',
+                          't8'=>'0',
+                          't9'=>'0',
+                          't10'=>'0',
+                          't11'=>'0',
+                          'dname'=>'0',
+                          'sendReally'=>'0',
+                          'troopsSent'=>'1',
+                          'currentDid'=>$this->myCityIdFrom,
+                          'b'=>'2',
+                          'dname'=>'',
+                          'x'=>$this->cityIdToX,
+                          'y'=>$this->cityIdToY,
+                          's1'=>'ok'
+            );
+            #echo 'Attac on: #'.$this->currentCityId.' (x: '.$this->cityIdToX.', y: '.$this->cityIdToY.') sent. <br/>';
+            sleep(rand(1,2));
+            $html = $this->callCurl(TRAVIAN_SERVER.'/build.php?id=39&tt=2', $data,'POST');
+            return $villageData;
+        } else {
+            return false;
+        }
+
+    }
+
+    /*
+    * Calculate distance from my city coordinates and the given coordinates
+    */
+    public static function calculateDistance($x = 0, $y = 0) {
+        $d = pow($x - MY_CITY_X,2) + pow($y - MY_CITY_Y,2);
+        return round(sqrt($d),1);
     }
 
 }

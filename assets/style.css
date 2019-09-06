@@ -4,8 +4,11 @@ body {
     font-family: Arial, Helvetica, Verdana, sans-serif;
 }
 a {
-    color: #fff;
+    color: #89af0d;
     font-weight: bold;
+}
+.pointer {
+    cursor: pointer;
 }
 .header {
     margin-bottom: 20px;
